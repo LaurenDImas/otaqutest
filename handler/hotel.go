@@ -3,12 +3,14 @@ package handler
 import (
 	"log"
 	"net/http"
+	"os"
 	"otaqutest/hotel"
 	"strconv"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gofiber/fiber/v2"
+	"github.com/joho/godotenv"
 )
 
 type hotelHandler struct {
@@ -21,8 +23,12 @@ func NewhotelHandler(hotelService hotel.Service) *hotelHandler {
 
 func (h *hotelHandler) CreateHotel(c *fiber.Ctx) error {
 	var input hotel.HotelInput
+	err := godotenv.Load()
+	if err != nil {
+		panic("Can't load configuration!")
+	}
 
-	res, err := http.Get("http://115.85.80.33/test-scrapping/avail.html")
+	res, err := http.Get(os.Getenv("LINK_SCRAPPING"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -37,13 +43,12 @@ func (h *hotelHandler) CreateHotel(c *fiber.Ctx) error {
 		log.Fatal(err)
 	}
 
-	replacer := strings.NewReplacer("IDR", "", ".", "")
-
 	errDelete := h.hotelService.DeleteHotel()
 	if errDelete != nil {
 		return c.Status(fiber.ErrBadRequest.Code).JSON(fiber.ErrBadRequest)
 	}
 
+	replacer := strings.NewReplacer("IDR", "", ".", "")
 	doc.Find("#content-hotel").Children().Each(func(i int, sel *goquery.Selection) {
 		row := input
 		row.Name = sel.Find("h3").Text()
@@ -54,6 +59,7 @@ func (h *hotelHandler) CreateHotel(c *fiber.Ctx) error {
 		replacePriceString := replacer.Replace(strings.ReplaceAll(priceString, " ", ""))
 		row.Price, _ = strconv.Atoi(replacePriceString)
 
+		// Save data to table hotel
 		_, err := h.hotelService.CreateHotel(row)
 		if err != nil {
 			c.Status(fiber.ErrBadRequest.Code).JSON(fiber.ErrBadRequest)
