@@ -1,8 +1,8 @@
 TEST SCRAPPING http://115.85.80.33/test-scrapping/avail.html
 
-- Import database mysql di folder database
-- sesuaikan konfigurasi koneksi db di file .env
-- jalankan server golang menggunakan script go run main.go
+- Buat Database mysql dengan nama **otaqu_test** jalankan script sql membuat table terdapat di folder database
+- Sesuaikan konfigurasi koneksi database di file .env
+- Jalankan server golang menggunakan script go run main.go
 
 Buatlah API menggunakan Golang (GoFiber Framework) dengan ketentuan sebagai berikut : 
 
